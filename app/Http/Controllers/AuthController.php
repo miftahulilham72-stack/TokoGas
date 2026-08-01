@@ -24,26 +24,58 @@ class AuthController extends Controller
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
+            'role' => 'required|in:admin,kasir,owner',
         ]);
 
-        // Username dan password khusus (hardcoded)
-        $validUsername = 'admin';
-        $validPassword = 'admin123'; // Ganti dengan password yang diinginkan
+        // Data user (hardcoded)
+        $users = [
+            'admin' => [
+                'password' => 'admin123',
+                'role' => 'admin',
+                'name' => 'Administrator'
+            ],
+            'kasir' => [
+                'password' => 'kasir123',
+                'role' => 'kasir',
+                'name' => 'Kasir'
+            ],
+            'owner' => [
+                'password' => 'owner123',
+                'role' => 'owner',
+                'name' => 'Owner'
+            ],
+        ];
 
-        // Cek username dan password
-        if ($request->username === $validUsername && $request->password === $validPassword) {
-            // Set session login
-            Session::put('is_admin', true);
-            Session::put('username', $request->username);
-            
-            return redirect()->route('dashboard')
-                ->with('success', 'Selamat datang, Admin!');
+        // Cek apakah username ada
+        if (!isset($users[$request->username])) {
+            return redirect()->back()
+                ->with('error', 'Username tidak ditemukan!')
+                ->withInput();
         }
 
-        // Jika salah
-        return redirect()->back()
-            ->with('error', 'Username atau Password salah!')
-            ->withInput();
+        // Cek password
+        if ($users[$request->username]['password'] !== $request->password) {
+            return redirect()->back()
+                ->with('error', 'Password salah!')
+                ->withInput();
+        }
+
+        // Cek role yang dipilih sesuai
+        if ($users[$request->username]['role'] !== $request->role) {
+            return redirect()->back()
+                ->with('error', 'Role tidak sesuai dengan akun!')
+                ->withInput();
+        }
+
+        // Set session
+        Session::put('is_logged_in', true);
+        Session::put('username', $request->username);
+        Session::put('role', $request->role);
+        Session::put('role_name', $users[$request->username]['name']);
+        Session::put('user_data', $users[$request->username]);
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Selamat datang, ' . $users[$request->username]['name'] . '!');
     }
 
     /**
@@ -51,7 +83,7 @@ class AuthController extends Controller
      */
     public function logout()
     {
-        Session::flush(); // Hapus semua session
+        Session::flush();
         return redirect()->route('login')
             ->with('success', 'Anda telah logout.');
     }
@@ -61,6 +93,22 @@ class AuthController extends Controller
      */
     public static function isLoggedIn()
     {
-        return Session::has('is_admin') && Session::get('is_admin') === true;
+        return Session::has('is_logged_in') && Session::get('is_logged_in') === true;
+    }
+
+    /**
+     * Get current user role
+     */
+    public static function getRole()
+    {
+        return Session::get('role', 'guest');
+    }
+
+    /**
+     * Check if user has specific role
+     */
+    public static function hasRole($role)
+    {
+        return Session::get('role') === $role;
     }
 }

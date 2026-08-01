@@ -8,8 +8,9 @@ use App\Models\Penjualan;
 use App\Models\Pembelian;
 use App\Models\PenjualanBatch;
 use App\Models\Stok;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use PDF;
+use DB;
 
 class LaporanController extends Controller
 {
@@ -54,24 +55,94 @@ class LaporanController extends Controller
     }
 
     /**
-     * Laporan Keuntungan dengan FIFO
+     * Laporan Keuntungan per Hari dengan FIFO
      */
     public function laba(Request $request)
     {
         $bulan = $request->bulan ?? Carbon::now()->month;
         $tahun = $request->tahun ?? Carbon::now()->year;
+        $tanggal = $request->tanggal;
 
-        $penjualans = Penjualan::whereMonth('tanggal_jual', $bulan)
-            ->whereYear('tanggal_jual', $tahun)
-            ->with(['details.batches.pembelianDetail', 'details.jenisGas'])
-            ->get();
+        // Ambil semua penjualan
+        $query = Penjualan::with(['details.batches.pembelianDetail', 'details.jenisGas'])
+            ->whereMonth('tanggal_jual', $bulan)
+            ->whereYear('tanggal_jual', $tahun);
 
-        $dataLaba = $this->buildLabaData($penjualans);
+        // Filter jika ada tanggal spesifik
+        if ($tanggal) {
+            $query->whereDate('tanggal_jual', $tanggal);
+        }
 
-        return view('laporan.laba', array_merge($dataLaba, compact(
+        $penjualans = $query->get();
+
+        // Data per hari
+        $labaPerHari = [];
+        $totalKeuntungan = 0;
+        $detailLaba = [];
+
+        foreach ($penjualans as $penjualan) {
+            $tanggalKey = $penjualan->tanggal_jual->format('Y-m-d');
+            
+            if (!isset($labaPerHari[$tanggalKey])) {
+                $labaPerHari[$tanggalKey] = [
+                    'tanggal' => $penjualan->tanggal_jual,
+                    'total_penjualan' => 0,
+                    'total_pembelian' => 0,
+                    'keuntungan' => 0,
+                    'detail' => []
+                ];
+            }
+
+            foreach ($penjualan->details as $detail) {
+                foreach ($detail->batches as $batch) {
+                    $hargaJual = $detail->harga_jual_saat_itu;
+                    $hargaBeli = $batch->pembelianDetail->harga_beli_saat_itu;
+                    $keuntungan = $batch->jumlah_diambil * ($hargaJual - $hargaBeli);
+                    
+                    $labaPerHari[$tanggalKey]['total_penjualan'] += ($batch->jumlah_diambil * $hargaJual);
+                    $labaPerHari[$tanggalKey]['total_pembelian'] += ($batch->jumlah_diambil * $hargaBeli);
+                    $labaPerHari[$tanggalKey]['keuntungan'] += $keuntungan;
+                    $totalKeuntungan += $keuntungan;
+
+                    $detailLaba[] = [
+                        'tanggal' => $penjualan->tanggal_jual,
+                        'jenis_gas' => $detail->jenisGas->nama,
+                        'tipe' => $penjualan->tipe_pelanggan,
+                        'jumlah' => $batch->jumlah_diambil,
+                        'harga_jual' => $hargaJual,
+                        'harga_beli' => $hargaBeli,
+                        'keuntungan' => $keuntungan
+                    ];
+                }
+            }
+        }
+
+        // Urutkan berdasarkan tanggal
+        ksort($labaPerHari);
+
+        // Ringkasan per jenis gas
+        $ringkasan = [];
+        foreach ($detailLaba as $item) {
+            $key = $item['jenis_gas'];
+            if (!isset($ringkasan[$key])) {
+                $ringkasan[$key] = [
+                    'total_jual' => 0,
+                    'total_keuntungan' => 0
+                ];
+            }
+            $ringkasan[$key]['total_jual'] += $item['jumlah'];
+            $ringkasan[$key]['total_keuntungan'] += $item['keuntungan'];
+        }
+
+        return view('laporan.laba', compact(
+            'labaPerHari',
+            'detailLaba',
+            'ringkasan',
+            'totalKeuntungan',
             'bulan',
-            'tahun'
-        )));
+            'tahun',
+            'tanggal'
+        ));
     }
 
     /**
@@ -99,54 +170,62 @@ class LaporanController extends Controller
     {
         $stokData = JenisGas::with('stok')->get();
         
-        $pdf = Pdf::loadView('pdf.laporan_stok', compact('stokData'));
+        $pdf = PDF::loadView('pdf.laporan_stok', compact('stokData'));
         return $pdf->download('laporan_stok_' . Carbon::now()->format('Y-m-d') . '.pdf');
     }
 
     /**
-     * Cetak PDF Laporan Laba
+     * Cetak PDF Laporan Laba per Hari
      */
     public function cetakLabaPDF(Request $request)
     {
         $bulan = $request->bulan ?? Carbon::now()->month;
         $tahun = $request->tahun ?? Carbon::now()->year;
+        $tanggal = $request->tanggal;
 
-        $penjualans = Penjualan::whereMonth('tanggal_jual', $bulan)
-            ->whereYear('tanggal_jual', $tahun)
-            ->with(['details.batches.pembelianDetail', 'details.jenisGas'])
-            ->get();
+        $query = Penjualan::with(['details.batches.pembelianDetail', 'details.jenisGas'])
+            ->whereMonth('tanggal_jual', $bulan)
+            ->whereYear('tanggal_jual', $tahun);
 
-        $dataLaba = $this->buildLabaData($penjualans);
+        if ($tanggal) {
+            $query->whereDate('tanggal_jual', $tanggal);
+        }
 
-        $pdf = Pdf::loadView('pdf.laporan_laba', array_merge($dataLaba, compact('bulan', 'tahun')));
-        return $pdf->download('laporan_laba_' . Carbon::now()->format('Y-m-d') . '.pdf');
-    }
+        $penjualans = $query->get();
 
-    protected function buildLabaData($penjualans)
-    {
+        $labaPerHari = [];
         $totalKeuntungan = 0;
         $detailLaba = [];
-        $ringkasan = [];
 
         foreach ($penjualans as $penjualan) {
-            $tanggal = $penjualan->tanggal_jual ? Carbon::parse($penjualan->tanggal_jual) : Carbon::now();
+            $tanggalKey = $penjualan->tanggal_jual->format('Y-m-d');
+            
+            if (!isset($labaPerHari[$tanggalKey])) {
+                $labaPerHari[$tanggalKey] = [
+                    'tanggal' => $penjualan->tanggal_jual,
+                    'total_penjualan' => 0,
+                    'total_pembelian' => 0,
+                    'keuntungan' => 0,
+                    'detail' => []
+                ];
+            }
 
-            foreach ($penjualan->details ?? [] as $detail) {
-                $jenisGasNama = optional($detail->jenisGas)->nama ?? 'Tidak diketahui';
-
-                foreach ($detail->batches ?? [] as $batch) {
-                    $jumlahDiambil = (float) ($batch->jumlah_diambil ?? 0);
-                    $hargaJual = (float) ($detail->harga_jual_saat_itu ?? 0);
-                    $hargaBeli = (float) (optional($batch->pembelianDetail)->harga_beli_saat_itu ?? 0);
-                    $keuntungan = $jumlahDiambil * ($hargaJual - $hargaBeli);
-
+            foreach ($penjualan->details as $detail) {
+                foreach ($detail->batches as $batch) {
+                    $hargaJual = $detail->harga_jual_saat_itu;
+                    $hargaBeli = $batch->pembelianDetail->harga_beli_saat_itu;
+                    $keuntungan = $batch->jumlah_diambil * ($hargaJual - $hargaBeli);
+                    
+                    $labaPerHari[$tanggalKey]['total_penjualan'] += ($batch->jumlah_diambil * $hargaJual);
+                    $labaPerHari[$tanggalKey]['total_pembelian'] += ($batch->jumlah_diambil * $hargaBeli);
+                    $labaPerHari[$tanggalKey]['keuntungan'] += $keuntungan;
                     $totalKeuntungan += $keuntungan;
 
                     $detailLaba[] = [
-                        'tanggal' => $tanggal,
-                        'jenis_gas' => $jenisGasNama,
-                        'tipe' => $penjualan->tipe_pelanggan ?? '-',
-                        'jumlah' => $jumlahDiambil,
+                        'tanggal' => $penjualan->tanggal_jual,
+                        'jenis_gas' => $detail->jenisGas->nama,
+                        'tipe' => $penjualan->tipe_pelanggan,
+                        'jumlah' => $batch->jumlah_diambil,
                         'harga_jual' => $hargaJual,
                         'harga_beli' => $hargaBeli,
                         'keuntungan' => $keuntungan
@@ -155,6 +234,9 @@ class LaporanController extends Controller
             }
         }
 
+        ksort($labaPerHari);
+
+        $ringkasan = [];
         foreach ($detailLaba as $item) {
             $key = $item['jenis_gas'];
             if (!isset($ringkasan[$key])) {
@@ -163,15 +245,21 @@ class LaporanController extends Controller
                     'total_keuntungan' => 0
                 ];
             }
-
             $ringkasan[$key]['total_jual'] += $item['jumlah'];
             $ringkasan[$key]['total_keuntungan'] += $item['keuntungan'];
         }
 
-        return [
-            'detailLaba' => $detailLaba,
-            'ringkasan' => $ringkasan,
-            'totalKeuntungan' => $totalKeuntungan,
-        ];
+        $pdf = PDF::loadView('pdf.laporan_laba', compact(
+            'labaPerHari', 
+            'detailLaba', 
+            'ringkasan', 
+            'totalKeuntungan', 
+            'bulan', 
+            'tahun',
+            'tanggal'
+        ));
+        
+        $namaFile = 'laporan_laba_' . ($tanggal ?? $bulan . '-' . $tahun) . '.pdf';
+        return $pdf->download($namaFile);
     }
 }

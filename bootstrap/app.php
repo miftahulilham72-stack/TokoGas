@@ -3,7 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\AuthMiddleware; // Tambahkan ini
+use App\Http\Middleware\AuthMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,9 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Register middleware alias
         $middleware->alias([
-            'auth.admin' => AuthMiddleware::class, // Tambahkan ini
+            'auth.admin' => AuthMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -96,6 +96,7 @@
                     <div class="col-md-3">
                         <input type="number" class="form-control harga-jual" name="items[0][harga_jual]" 
                                placeholder="Harga Jual" min="0" step="500" required>
+                        <small class="text-muted">Bisa diubah manual</small>
                     </div>
                     <div class="col-md-2">
                         <input type="text" class="form-control subtotal" readonly placeholder="Subtotal">

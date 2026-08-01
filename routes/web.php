@@ -22,14 +22,23 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 // ============================================
 Route::middleware(['auth.admin'])->group(function () {
 
-    // Dashboard
+    // Dashboard - Semua role bisa akses
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Master Data
-    Route::resource('agen', AgenController::class);
-    Route::resource('jenis-gas', JenisGasController::class);
+    // ============================================
+    // ROUTES KHUSUS ADMIN & OWNER
+    // ============================================
+    Route::middleware(['auth.admin:admin,owner'])->group(function () {
+        // Master Data
+        Route::resource('agen', AgenController::class);
+        Route::resource('jenis-gas', JenisGasController::class);
+    });
 
-    // Transaksi
+    // ============================================
+    // ROUTES SEMUA ROLE (Admin, Kasir, Owner)
+    // ============================================
+    
+    // Transaksi - Semua role bisa akses
     Route::get('/pembelian', [PembelianController::class, 'index'])->name('pembelian.index');
     Route::get('/pembelian/create', [PembelianController::class, 'create'])->name('pembelian.create');
     Route::post('/pembelian', [PembelianController::class, 'store'])->name('pembelian.store');
@@ -42,16 +51,20 @@ Route::middleware(['auth.admin'])->group(function () {
     Route::post('/penjualan', [PenjualanController::class, 'store'])->name('penjualan.store');
     Route::get('/get-harga-jual', [PenjualanController::class, 'getHargaJual'])->name('get.harga.jual');
 
-    // Piutang
+    // Piutang - Semua role bisa akses
     Route::get('/piutang', [PiutangController::class, 'index'])->name('piutang.index');
     Route::get('/piutang/bayar/{id}', [PiutangController::class, 'bayar'])->name('piutang.bayar');
     Route::post('/piutang/proses-bayar/{id}', [PiutangController::class, 'prosesBayar'])->name('piutang.proses-bayar');
     Route::get('/piutang/detail/{id}', [PiutangController::class, 'getDetail'])->name('piutang.detail');
 
-    // Laporan
-    Route::get('/laporan/stok', [LaporanController::class, 'stok'])->name('laporan.stok');
-    Route::get('/laporan/laba', [LaporanController::class, 'laba'])->name('laporan.laba');
-    Route::get('/laporan/piutang', [LaporanController::class, 'piutang'])->name('laporan.piutang');
-    Route::get('/laporan/cetak-stok-pdf', [LaporanController::class, 'cetakStokPDF'])->name('laporan.cetak-stok-pdf');
-    Route::get('/laporan/cetak-laba-pdf', [LaporanController::class, 'cetakLabaPDF'])->name('laporan.cetak-laba-pdf');
+    // ============================================
+    // ROUTES KHUSUS ADMIN & OWNER (Laporan)
+    // ============================================
+    Route::middleware(['auth.admin:admin,owner'])->group(function () {
+        Route::get('/laporan/stok', [LaporanController::class, 'stok'])->name('laporan.stok');
+        Route::get('/laporan/laba', [LaporanController::class, 'laba'])->name('laporan.laba');
+        Route::get('/laporan/piutang', [LaporanController::class, 'piutang'])->name('laporan.piutang');
+        Route::get('/laporan/cetak-stok-pdf', [LaporanController::class, 'cetakStokPDF'])->name('laporan.cetak-stok-pdf');
+        Route::get('/laporan/cetak-laba-pdf', [LaporanController::class, 'cetakLabaPDF'])->name('laporan.cetak-laba-pdf');
+    });
 });
