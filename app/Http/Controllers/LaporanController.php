@@ -30,7 +30,6 @@ class LaporanController extends Controller
             if ($stok) {
                 $butuh = $stok->getRekomendasiBeli();
                 if ($butuh > 0) {
-                    // Ambil harga beli terakhir
                     $hargaTerakhir = $item->pembelianDetails()
                         ->where('sisa_stok', '>', 0)
                         ->orderBy('id', 'desc')
@@ -68,7 +67,6 @@ class LaporanController extends Controller
             ->whereMonth('tanggal_jual', $bulan)
             ->whereYear('tanggal_jual', $tahun);
 
-        // Filter jika ada tanggal spesifik
         if ($tanggal) {
             $query->whereDate('tanggal_jual', $tanggal);
         }
@@ -89,6 +87,7 @@ class LaporanController extends Controller
                     'total_penjualan' => 0,
                     'total_pembelian' => 0,
                     'keuntungan' => 0,
+                    'jumlah_terjual' => 0,
                     'detail' => []
                 ];
             }
@@ -102,6 +101,7 @@ class LaporanController extends Controller
                     $labaPerHari[$tanggalKey]['total_penjualan'] += ($batch->jumlah_diambil * $hargaJual);
                     $labaPerHari[$tanggalKey]['total_pembelian'] += ($batch->jumlah_diambil * $hargaBeli);
                     $labaPerHari[$tanggalKey]['keuntungan'] += $keuntungan;
+                    $labaPerHari[$tanggalKey]['jumlah_terjual'] += $batch->jumlah_diambil;
                     $totalKeuntungan += $keuntungan;
 
                     $detailLaba[] = [
@@ -111,7 +111,8 @@ class LaporanController extends Controller
                         'jumlah' => $batch->jumlah_diambil,
                         'harga_jual' => $hargaJual,
                         'harga_beli' => $hargaBeli,
-                        'keuntungan' => $keuntungan
+                        'keuntungan' => $keuntungan,
+                        'status_pembayaran' => $penjualan->status_pembayaran
                     ];
                 }
             }
@@ -134,11 +135,19 @@ class LaporanController extends Controller
             $ringkasan[$key]['total_keuntungan'] += $item['keuntungan'];
         }
 
+        // Total keseluruhan
+        $totalPenjualan = collect($labaPerHari)->sum('total_penjualan');
+        $totalPembelian = collect($labaPerHari)->sum('total_pembelian');
+        $totalTerjual = collect($labaPerHari)->sum('jumlah_terjual');
+
         return view('laporan.laba', compact(
             'labaPerHari',
             'detailLaba',
             'ringkasan',
             'totalKeuntungan',
+            'totalPenjualan',
+            'totalPembelian',
+            'totalTerjual',
             'bulan',
             'tahun',
             'tanggal'
@@ -196,6 +205,9 @@ class LaporanController extends Controller
         $labaPerHari = [];
         $totalKeuntungan = 0;
         $detailLaba = [];
+        $totalPenjualan = 0;
+        $totalPembelian = 0;
+        $totalTerjual = 0;
 
         foreach ($penjualans as $penjualan) {
             $tanggalKey = $penjualan->tanggal_jual->format('Y-m-d');
@@ -206,6 +218,7 @@ class LaporanController extends Controller
                     'total_penjualan' => 0,
                     'total_pembelian' => 0,
                     'keuntungan' => 0,
+                    'jumlah_terjual' => 0,
                     'detail' => []
                 ];
             }
@@ -219,7 +232,11 @@ class LaporanController extends Controller
                     $labaPerHari[$tanggalKey]['total_penjualan'] += ($batch->jumlah_diambil * $hargaJual);
                     $labaPerHari[$tanggalKey]['total_pembelian'] += ($batch->jumlah_diambil * $hargaBeli);
                     $labaPerHari[$tanggalKey]['keuntungan'] += $keuntungan;
+                    $labaPerHari[$tanggalKey]['jumlah_terjual'] += $batch->jumlah_diambil;
                     $totalKeuntungan += $keuntungan;
+                    $totalPenjualan += ($batch->jumlah_diambil * $hargaJual);
+                    $totalPembelian += ($batch->jumlah_diambil * $hargaBeli);
+                    $totalTerjual += $batch->jumlah_diambil;
 
                     $detailLaba[] = [
                         'tanggal' => $penjualan->tanggal_jual,
@@ -228,7 +245,8 @@ class LaporanController extends Controller
                         'jumlah' => $batch->jumlah_diambil,
                         'harga_jual' => $hargaJual,
                         'harga_beli' => $hargaBeli,
-                        'keuntungan' => $keuntungan
+                        'keuntungan' => $keuntungan,
+                        'status_pembayaran' => $penjualan->status_pembayaran
                     ];
                 }
             }
@@ -253,7 +271,10 @@ class LaporanController extends Controller
             'labaPerHari', 
             'detailLaba', 
             'ringkasan', 
-            'totalKeuntungan', 
+            'totalKeuntungan',
+            'totalPenjualan',
+            'totalPembelian',
+            'totalTerjual',
             'bulan', 
             'tahun',
             'tanggal'

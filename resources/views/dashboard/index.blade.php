@@ -8,8 +8,8 @@
     <div>
         <h1><i class="fas fa-home"></i> Dashboard</h1>
         <p class="text-muted mb-0">
-            Selamat datang, <strong>{{ Session::get('username') ?? 'Admin' }}</strong>!
-            <span class="badge bg-primary badge-minimum ms-2">
+            Selamat datang, <strong>{{ Session::get('username') ?? 'Admin' }}</strong>! 
+            <span class="badge bg-primary badge-minimum">
                 @php
                     $roleIcon = [
                         'admin' => '👑 Admin',
@@ -19,8 +19,8 @@
                 @endphp
                 {{ $roleIcon[Session::get('role', '')] ?? '👤 User' }}
             </span>
-            <span class="d-none d-sm-inline ms-2">{{ date('l, d F Y') }}</span>
-            <span class="d-sm-none ms-2">{{ date('d/m/Y') }}</span>
+            <span class="d-none d-sm-inline">{{ date('l, d F Y') }}</span>
+            <span class="d-sm-none">{{ date('d/m/Y') }}</span>
         </p>
     </div>
     <div class="d-flex align-items-center gap-2">
@@ -28,8 +28,8 @@
             <span class="avatar">{{ strtoupper(substr(Session::get('username') ?? 'Admin', 0, 1)) }}</span>
             <span class="d-none d-sm-inline">{{ Session::get('username') ?? 'Admin' }}</span>
         </span>
-        <span class="badge bg-light text-dark px-3 py-2">
-            <i class="far fa-clock me-1"></i> {{ date('H:i') }}
+        <span class="badge bg-light text-dark px-3 py-2" id="realTimeClock">
+            <i class="far fa-clock me-1"></i> <span id="clockDisplay">{{ date('H:i:s') }}</span>
         </span>
     </div>
 </div>
@@ -228,4 +228,24 @@
         </div>
     </div>
 </div>
+
+@endsection
+
+@section('scripts')
+<script>
+// ===== REAL TIME CLOCK =====
+function updateClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('clockDisplay').textContent = hours + ':' + minutes + ':' + seconds;
+}
+
+// Update setiap 1 detik
+setInterval(updateClock, 1000);
+
+// Jalankan pertama kali
+updateClock();
+</script>
 @endsection

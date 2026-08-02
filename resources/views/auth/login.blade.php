@@ -59,8 +59,8 @@
             border-radius: 24px;
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
             width: 100%;
-            max-width: 440px;
-            padding: 35px 30px;
+            max-width: 420px;
+            padding: 35px 30px 30px;
             position: relative;
             z-index: 1;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -120,13 +120,26 @@
             margin-top: 2px;
         }
         
+        .brand .admin-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f7971e, #ffd700);
+            color: #1a1a2e;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 14px;
+            border-radius: 50px;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
         .form-label {
             font-weight: 600;
             color: #333;
             font-size: 13px;
         }
         
-        .form-control, .form-select {
+        .form-control {
             border-radius: 12px;
             padding: 11px 16px;
             border: 2px solid #e9ecef;
@@ -134,7 +147,7 @@
             font-size: 14px;
             background: #f8f9fa;
         }
-        .form-control:focus, .form-select:focus {
+        .form-control:focus {
             border-color: #f7971e;
             box-shadow: 0 0 0 4px rgba(247, 151, 30, 0.12);
             background: white;
@@ -144,13 +157,22 @@
             font-size: 13px;
         }
         
-        .form-select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 16px center;
-            padding-right: 40px;
+        .input-group-custom {
+            position: relative;
+        }
+        
+        .input-group-custom .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #adb5bd;
+            z-index: 10;
+            font-size: 16px;
+        }
+        
+        .input-group-custom .form-control {
+            padding-left: 44px;
         }
         
         .btn-login {
@@ -169,6 +191,7 @@
         .btn-login:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 35px rgba(247, 151, 30, 0.4);
+            color: #1a1a2e;
         }
         .btn-login:active { transform: translateY(0); }
         
@@ -198,10 +221,22 @@
             color: #333;
             width: 100%;
             transition: all 0.3s;
-            cursor: default;
+            cursor: pointer;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
         }
-        .btn-google i { color: #ea4335; margin-right: 10px; }
+        .btn-google:hover {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            color: #333;
+        }
+        .btn-google i { color: #ea4335; font-size: 20px; }
         
         .form-check-input:checked {
             background-color: #f7971e;
@@ -213,8 +248,12 @@
             text-decoration: none;
             font-size: 13px;
             font-weight: 500;
+            transition: all 0.3s;
         }
-        .forgot-link:hover { text-decoration: underline; }
+        .forgot-link:hover { 
+            text-decoration: underline;
+            color: #e07c0a;
+        }
         
         .footer-text {
             text-align: center;
@@ -247,6 +286,11 @@
             color: #16a34a;
             border-left: 4px solid #16a34a;
         }
+        .alert-info {
+            background: #eff6ff;
+            color: #2563eb;
+            border-left: 4px solid #2563eb;
+        }
         
         .version {
             text-align: center;
@@ -255,54 +299,23 @@
             font-size: 11px;
         }
         
-        /* Role Badge di Select Option */
-        .role-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .role-option .role-badge {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 50px;
-        }
-        
-        /* Info login */
-        .login-info {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            border: 1px dashed #dee2e6;
-        }
-        .login-info small {
-            color: #6c757d;
-            font-size: 12px;
-        }
-        .login-info .credential {
-            display: inline-block;
-            background: white;
-            padding: 2px 10px;
-            border-radius: 4px;
-            font-weight: 600;
-            font-size: 12px;
-            color: #333;
-            border: 1px solid #e9ecef;
-            margin: 2px;
+        .version i {
+            color: #f7971e;
         }
         
         @media (max-width: 575.98px) {
             .login-container { padding: 24px 18px; border-radius: 18px; }
             .brand .icon { width: 50px; height: 50px; line-height: 50px; font-size: 24px; }
             .brand h1 { font-size: 22px; }
-            .form-control, .form-select { font-size: 13px; padding: 9px 14px; }
+            .form-control { font-size: 13px; padding: 9px 14px; }
             .btn-login { font-size: 14px; padding: 11px; }
-            .login-info .credential { font-size: 11px; padding: 1px 8px; }
+            .btn-google { font-size: 13px; padding: 9px; }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
+        <!-- Alert Messages -->
         @if(session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-circle me-2"></i> {{ session('error') }}
@@ -316,14 +329,23 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
+        
+        @if(session('info'))
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle me-2"></i> {{ session('info') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
 
+        <!-- Brand -->
         <div class="brand">
             <div class="icon"><i class="fas fa-fire"></i></div>
             <h1>Toko<span>Gas</span></h1>
             <p>Sistem Manajemen Toko Gas</p>
+            <span class="admin-badge"><i class="fas fa-shield-alt me-1"></i> Administrator</span>
         </div>
 
-    
+        <!-- Form Login -->
         <form action="{{ route('login.proses') }}" method="POST">
             @csrf
             
@@ -331,33 +353,14 @@
                 <label for="username" class="form-label">
                     <i class="fas fa-user me-1"></i> Username
                 </label>
-                <input type="text" class="form-control @error('username') is-invalid @enderror" 
-                       id="username" name="username" placeholder="Masukkan Username" 
-                       value="{{ old('username') }}" required autofocus>
+                <div class="input-group-custom">
+                    <span class="input-icon"><i class="fas fa-user"></i></span>
+                    <input type="text" class="form-control @error('username') is-invalid @enderror" 
+                           id="username" name="username" placeholder="Masukkan Username" 
+                           value="{{ old('username') }}" required autofocus>
+                </div>
                 @error('username')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-            
-            <div class="mb-3">
-                <label for="role" class="form-label">
-                    <i class="fas fa-user-tag me-1"></i> Pilih Role / Peran
-                </label>
-                <select class="form-select @error('role') is-invalid @enderror" 
-                        id="role" name="role" required>
-                    <option value="">Pilih Role</option>
-                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>
-                        👑 Admin - Akses Penuh
-                    </option>
-                    <option value="kasir" {{ old('role') == 'kasir' ? 'selected' : '' }}>
-                        💳 Kasir - Transaksi & Piutang
-                    </option>
-                    <option value="owner" {{ old('role') == 'owner' ? 'selected' : '' }}>
-                        🏢 Owner - Laporan & Data
-                    </option>
-                </select>
-                @error('role')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
             </div>
             
@@ -365,19 +368,26 @@
                 <label for="password" class="form-label">
                     <i class="fas fa-lock me-1"></i> Password
                 </label>
-                <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                       id="password" name="password" placeholder="Masukkan Password" required>
+                <div class="input-group-custom">
+                    <span class="input-icon"><i class="fas fa-lock"></i></span>
+                    <input type="password" class="form-control @error('password') is-invalid @enderror" 
+                           id="password" name="password" placeholder="Masukkan Password" required>
+                </div>
                 @error('password')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
             </div>
             
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="remember">
-                    <label class="form-check-label" for="remember" style="font-size: 13px;">Ingat saya</label>
+                    <label class="form-check-label" for="remember" style="font-size: 13px;">
+                        <i class="fas fa-check-circle me-1" style="color: #f7971e;"></i> Ingat saya
+                    </label>
                 </div>
-                <a href="#" class="forgot-link">Lupa kata sandi?</a>
+                <a href="{{ route('lupa-password') }}" class="forgot-link">
+                    <i class="fas fa-key me-1"></i> Lupa kata sandi?
+                </a>
             </div>
             
             <button type="submit" class="btn-login">
@@ -385,14 +395,18 @@
             </button>
         </form>
 
+        <!-- Divider -->
         <div class="divider"><span>atau</span></div>
-        <button class="btn-google" disabled>
-            <i class="fab fa-google"></i> Masuk dengan Google
-        </button>
 
+        <!-- Google Login -->
+        <a href="{{ route('auth.google') }}" class="btn-google">
+            <i class="fab fa-google"></i> Masuk dengan Google
+        </a>
+
+        <!-- Footer -->
         <div class="footer-text">
             Belum memiliki akun?<br>
-            <a href="#">Hubungi Admin</a>
+            <a href="#"><i class="fas fa-headset me-1"></i> Hubungi Admin</a>
         </div>
 
         <div class="version">

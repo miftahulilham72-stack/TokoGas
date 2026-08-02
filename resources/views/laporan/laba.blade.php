@@ -54,33 +54,37 @@
 
 <!-- Ringkasan Total -->
 <div class="row g-2 g-md-3 mb-3">
-    <div class="col-6 col-md-4">
+    <div class="col-4 col-md-3">
         <div class="card bg-success text-white">
             <div class="card-body text-center p-2 p-md-3">
                 <small>Total Penjualan</small>
-                <h4 class="mb-0">
-                    Rp {{ number_format(collect($labaPerHari)->sum('total_penjualan'), 0, ',', '.') }}
-                </h4>
+                <h5 class="mb-0">Rp {{ number_format($totalPenjualan ?? 0, 0, ',', '.') }}</h5>
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4">
+    <div class="col-4 col-md-3">
         <div class="card bg-danger text-white">
             <div class="card-body text-center p-2 p-md-3">
-                <small>Total Pembelian</small>
-                <h4 class="mb-0">
-                    Rp {{ number_format(collect($labaPerHari)->sum('total_pembelian'), 0, ',', '.') }}
-                </h4>
+                <small>Total Modal</small>
+                <h5 class="mb-0">Rp {{ number_format($totalPembelian ?? 0, 0, ',', '.') }}</h5>
             </div>
         </div>
     </div>
-    <div class="col-12 col-md-4">
-        <div class="card bg-warning text-dark">
+    <div class="col-4 col-md-3">
+        <div class="card bg-info text-white">
             <div class="card-body text-center p-2 p-md-3">
-                <small>Total Keuntungan</small>
-                <h4 class="mb-0 fw-bold">
+                <small>Total Terjual</small>
+                <h5 class="mb-0">{{ $totalTerjual ?? 0 }} Tabung</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-3">
+        <div class="card {{ ($totalKeuntungan ?? 0) >= 0 ? 'bg-warning' : 'bg-danger' }} text-dark">
+            <div class="card-body text-center p-2 p-md-3">
+                <small>Keuntungan Bersih</small>
+                <h5 class="mb-0 fw-bold">
                     Rp {{ number_format($totalKeuntungan ?? 0, 0, ',', '.') }}
-                </h4>
+                </h5>
             </div>
         </div>
     </div>
@@ -104,8 +108,9 @@
                 <thead>
                     <tr>
                         <th>Tanggal</th>
+                        <th class="text-center">Terjual</th>
                         <th class="text-end">Total Penjualan</th>
-                        <th class="text-end">Total Pembelian</th>
+                        <th class="text-end">Total Modal</th>
                         <th class="text-end">Keuntungan</th>
                         <th class="text-center">Status</th>
                     </tr>
@@ -118,6 +123,7 @@
                             <br>
                             <small class="text-muted">{{ $data['tanggal']->format('l') }}</small>
                         </td>
+                        <td class="text-center">{{ $data['jumlah_terjual'] }}</td>
                         <td class="text-end text-success">
                             Rp {{ number_format($data['total_penjualan'], 0, ',', '.') }}
                         </td>
@@ -139,23 +145,20 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center py-4">
+                        <td colspan="6" class="text-center py-4">
                             <i class="fas fa-inbox fa-2x text-muted"></i>
                             <p class="text-muted mt-2">Belum ada data penjualan</p>
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
-                <tfoot>
-                    <tr class="table-active fw-bold">
+                <tfoot class="table-active fw-bold">
+                    <tr>
                         <td>TOTAL</td>
-                        <td class="text-end text-success">
-                            Rp {{ number_format(collect($labaPerHari)->sum('total_penjualan'), 0, ',', '.') }}
-                        </td>
-                        <td class="text-end text-danger">
-                            Rp {{ number_format(collect($labaPerHari)->sum('total_pembelian'), 0, ',', '.') }}
-                        </td>
-                        <td class="text-end {{ $totalKeuntungan >= 0 ? 'text-success' : 'text-danger' }}">
+                        <td class="text-center">{{ $totalTerjual ?? 0 }}</td>
+                        <td class="text-end text-success">Rp {{ number_format($totalPenjualan ?? 0, 0, ',', '.') }}</td>
+                        <td class="text-end text-danger">Rp {{ number_format($totalPembelian ?? 0, 0, ',', '.') }}</td>
+                        <td class="text-end {{ ($totalKeuntungan ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
                             Rp {{ number_format($totalKeuntungan ?? 0, 0, ',', '.') }}
                         </td>
                         <td></td>
@@ -183,6 +186,7 @@
                         <th class="text-end">Harga Jual</th>
                         <th class="text-end">Harga Beli</th>
                         <th class="text-end">Keuntungan</th>
+                        <th class="text-center">Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -201,10 +205,17 @@
                         <td class="text-end fw-bold {{ $item['keuntungan'] >= 0 ? 'text-success' : 'text-danger' }}">
                             Rp {{ number_format($item['keuntungan'], 0, ',', '.') }}
                         </td>
+                        <td class="text-center">
+                            @if($item['status_pembayaran'] == 'lunas')
+                                <span class="badge bg-success">Lunas</span>
+                            @else
+                                <span class="badge bg-warning">Hutang</span>
+                            @endif
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-4">
+                        <td colspan="8" class="text-center py-4">
                             <i class="fas fa-inbox fa-2x text-muted"></i>
                             <p class="text-muted mt-2">Belum ada data transaksi</p>
                         </td>

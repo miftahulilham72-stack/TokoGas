@@ -39,6 +39,9 @@
                         <td>Rp {{ number_format($pembelian->total_harga, 0, ',', '.') }}</td>
                         <td>
                             <div class="table-actions">
+                                <a href="{{ route('pembelian.edit', $pembelian) }}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                                 <a href="{{ route('pembelian.show', $pembelian) }}" class="btn btn-sm btn-info">
                                     <i class="fas fa-eye"></i>
                                 </a>
